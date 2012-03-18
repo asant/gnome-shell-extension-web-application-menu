@@ -1,0 +1,10 @@
+This extension lets you run the Web Applications saved by Epiphany/GNOME-Web
+from a panel menu. It can also handle many profiles and show them as submenus,
+if you so desire. A setup application is provided to help you to eventually
+tweak these and more advanced settings.
+
+In case you didn't get your copy of this extension from github, you can find its
+original repository at the following url:
+
+https://github.com/asant/gnome-shell-extension-web-application-menu
+
