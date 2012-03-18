@@ -1,0 +1,58 @@
+* Sun Mar 18 2012
+- Extension and configurator more strictly compliant to the HACKING rules
+- Autotools scripts added, with modifications to metadata.json
+- extension and configurator prepared for localization
+- More info files added
+- configurator code "restyled"
+- don't reconnect all the signals on reload in configurator
+
+* Wed Mar 14 2012 - version 9
+- oops... added a button that handles the default profile
+
+* Tue Mar 13 2012 - version 8
+- fixed a bug which made a menu entry get disabled when unique
+- fixed a bug on error output on settings file missing
+- WebAppMenu class renamed to WebAppExtension
+- configurator icon
+- "advanced options" renamed to "advanced settings"
+- configurator window size changed
+- better configurator layout
+- configurator buttons for profiles
+- same text for context menu items and toolbar button tooltips 
+- reload button now has the correct text
+- sortable tree view columns
+- spawn application handler from configurator
+
+* Thu Feb 09 2012 - version 7
+- Fixed a little glitch on submenu sorting.
+- Major ab_insert() code cleanup.
+
+* Thu Feb 09 2012 - version 6
+- Deleted an accidentally left useless debug message.
+
+* Thu Feb 09 2012 - version 5
+- Latest Shell compatible version brought to 3.2.3
+- ab_insert() adapted to sort both entries and submenus.
+- the configuration dialog now uses a default json file.
+
+* Sat Jan 14 2012 - version 4
+- Disconnect from ShellAppSystem::installed-changed on disable() (thanks to
+  gcampax).
+
+* Thu Jan 12 2012 - version 3
+- Destroy file monitors on disable() (thanks to gcampax).
+- No actual need for deferred works, disabled.
+
+* Tue Jan 10 2012 - version 2
+- Fix minor stuff in metadata.
+- Configurator adapted in order to run on both versions 2 and 3 of Python
+
+* Sat Jan 07 2012 - version 1
+- First version, featuring a PyGI/Gtk3 configuration setup dialog that writes
+  changes in a json file (until GSettings gets fixed).
+- Possibility to ignore epiphany's default profile and rearrange the entries for
+  each profile in a submenu.
+- Show/Hide entry icons and setup their size.
+- Possibility to hide the entries not in the user's xdg menu path, in case the
+  user likes to delete the symlinks from there.
+

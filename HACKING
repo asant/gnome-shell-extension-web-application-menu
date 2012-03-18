@@ -1,0 +1,63 @@
+
+CODING STYLE
+============
+
+You're welcome to partecipate to the development of this project. If you wish
+to do so and send me your patches, please just follow these rules:
+
+ - strictly honor the GJS coding style rules (you'll find the latest version at
+   http://git.gnome.org/browse/gjs/tree/doc/Style_Guide.txt )
+
+ - All the labels shall be sufficiently self-descriptive and eventually use
+   underscores in case they are made up of many words, just_like_this. Constant
+   names shall always  be uppercase LIKE_THIS, while variable and function
+   names shall be lowercase like_this. Finally, camelcase shall be used for
+   defining prototype (class) names only, LikeThis.
+
+ - Please try hard not to insert bare constants in the actual code. Instead,
+   always assign them some label at the beginning of the file.
+   Examples:
+
+       some_statement(3); // <-- this sucks
+
+        ----
+
+       const SOME_CONSTANT = 3;
+       /*
+        * ...
+        */
+       some_statement(SOME_CONSTANT); // <-- now this is better
+
+   Of course signal names, style classes and similar constants are an exception.
+
+ - NEVER omit braces! That's a bad habit that could make bug hunting pointlessly
+   harder. Yes, seriously. I don't really mind code taking a line more.
+   Examples:
+
+        if (some_expression()) // <-- bad, bad, bad!!!
+           some_command();
+
+         -----
+
+        if (some_expression()) { // <-- much better, now
+            some_command();
+        }
+
+ - Althogh we all refer to the same interpreter (gjs), please avoid using
+   statements whose results depend on the singleton order, since that might
+   make the code unreadable anyway.
+
+ - Please make your code lines no longer than 80 characters, so that we all can
+   read them using any user interface. If you need to break flow control lines,
+   indentate the following line twice, just like this:
+
+        if ((expression1()) && (expression2()) ||
+                (expression3())) { // <-- 8 characters indentation
+            command();             // <-- 4 characters indentation
+        }
+
+ - Output messages must be delimited by double quotes ("), while other string
+   constants - such as signal names, style classes or other strings that shall
+   not be translated - must be surrounded by single quotes ('). This eventually
+   makes the work easier for both xgettext and us.
+

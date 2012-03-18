@@ -1,0 +1,9 @@
+{
+    "shell-version": [@compatible_shell_versions@], 
+    "uuid": "@uuid@", 
+    "name": "Web Application Menu",
+    "url": "@extension_url@", 
+    "description": "This extension lets you run the Web Applications saved by Epiphany from a panel menu. It can also handle many profiles and show them as submenus, if you like. A setup application is provided to help you eventually tweak these and more advanced settings.",
+    "version": @extension_version@
+}
+
