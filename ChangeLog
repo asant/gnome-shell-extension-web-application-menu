@@ -1,3 +1,6 @@
+* Mon Mar 19 2012
+- Italian localization
+
 * Sun Mar 18 2012
 - Extension and configurator more strictly compliant to the HACKING rules
 - Autotools scripts added, with modifications to metadata.json

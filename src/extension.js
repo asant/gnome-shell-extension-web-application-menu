@@ -61,7 +61,7 @@ const ERROR_MONITOR         = "ERROR: can't monitor configuration file.";
 const ERROR_NOT_A_DIRECTORY = "ERROR: \"%s\" is not a directory.";
 const ERROR_SPAWN           = "ERROR: could not run \"%s\"";
 const ERROR_UNPARSABLE_FILE = "ERROR: could not parse \"%s\".";
-const ERROR_UNREADABLE_FILE = "ERROR: could not read contents for file \"%s\.";
+const ERROR_UNREADABLE_FILE = "ERROR: could not read contents for file \"%s\".";
 
 /* divide and conquer search function for menu item insertion in
  * alphabetical order, with submenus at the top */
