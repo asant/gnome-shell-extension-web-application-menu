@@ -18,14 +18,12 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301,
 # USA.
 
-from optparse import OptionParser
 from gi.repository import Gio, GLib, GObject, Gtk
+from glib.option import OptionParser, make_option
 from collections import deque
 import gettext
 import json
-import os
 import sys
-import hashlib
 
 # general strings
 ADD_PROFILE_DIALOG      = "Add profile"
@@ -91,7 +89,8 @@ DEFAULT_OPTION_FILE_PARTS = [ GLib.get_user_data_dir(), 'gnome-shell',
         'extensions', EXTENSION_UUID, 'settings.json' ]
 
 gettext.textdomain(EXTENSION_UUID)
-_ = gettext.gettext
+# please don't use _() as it clashes with python's built-in _ symbol
+g = gettext.gettext
 
 # other constants
 APP_ID      = 'apps.gnome-shell.extensions.web-app-menu.configurator.file-'
@@ -140,9 +139,9 @@ class Configurator(Gtk.Application):
                 break
 
         # only an unique instance of this app is runnable for each json file.
-        # identify files by the md5 digests of their full paths
-        Gtk.Application.__init__(self, application_id=APP_ID + hashlib.md5(
-                str.encode(self.file.get_path())).hexdigest(),
+        # now hash by using GQuark
+        Gtk.Application.__init__(self, application_id="%s%ld" % (APP_ID,
+                GLib.quark_from_string(self.file.get_path())),
                 flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.connect('activate', self.on_activate)
 
@@ -193,18 +192,18 @@ class Configurator(Gtk.Application):
         hbox = Gtk.HBox(homogeneous = True, spacing = SPACING)
         
         dialog = Gtk.Dialog()
-        dialog.set_title(_(ADD_PROFILE_DIALOG))
+        dialog.set_title(g(ADD_PROFILE_DIALOG))
         dialog.set_modal(True)
         dialog.set_destroy_with_parent(True)
         dialog.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 
-        new_name.set_placeholder_text(_(PROFILE_NAME))
-        new_dir.set_placeholder_text(_(PROFILE_DIR))
+        new_name.set_placeholder_text(g(PROFILE_NAME))
+        new_dir.set_placeholder_text(g(PROFILE_DIR))
         new_dir.set_icon_from_stock(Gtk.EntryIconPosition.PRIMARY,
                 Gtk.STOCK_OPEN)
         new_dir.set_icon_tooltip_text(Gtk.EntryIconPosition.PRIMARY,
-                _(BROWSE_PROFILE_TEXT))
+                g(BROWSE_PROFILE_TEXT))
         hbox.pack_start(new_name, True, True, PADDING)
         hbox.pack_start(new_dir, True, True, PADDING)
         dialog.get_content_area().add(hbox)
@@ -222,7 +221,7 @@ class Configurator(Gtk.Application):
             if event.button != 1:
                 return
             chooser = Gtk.FileChooserDialog()
-            chooser.set_title(_(DIR_CHOOSER_TITLE))
+            chooser.set_title(g(DIR_CHOOSER_TITLE))
             chooser.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
             chooser.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
             chooser.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
@@ -279,7 +278,7 @@ class Configurator(Gtk.Application):
         res, i = self.selection.get_selected()
         if not(i is None):
             chooser = Gtk.FileChooserDialog()
-            chooser.set_title(_(DIR_CHOOSER_TITLE))
+            chooser.set_title(g(DIR_CHOOSER_TITLE))
             chooser.set_action(Gtk.FileChooserAction.SELECT_FOLDER)
             chooser.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
             chooser.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
@@ -296,14 +295,14 @@ class Configurator(Gtk.Application):
         if not(i is None):
             # emulating gtk_dialog_new_with_buttons()
             dialog = Gtk.Dialog()
-            dialog.set_title(_(DELETE_PROFILE_DIALOG))
+            dialog.set_title(g(DELETE_PROFILE_DIALOG))
             dialog.set_modal(True)
             dialog.set_destroy_with_parent(True)
             dialog.add_button(Gtk.STOCK_YES, Gtk.ResponseType.YES)
             dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 
             dialog.set_default_response(Gtk.ResponseType.CANCEL)
-            dialog.get_content_area().add(Gtk.Label(_(DELETE_PROFILE_TEXT)))
+            dialog.get_content_area().add(Gtk.Label(g(DELETE_PROFILE_TEXT)))
             dialog.set_transient_for(self.win)
             dialog.show_all()
 
@@ -323,7 +322,7 @@ class Configurator(Gtk.Application):
             try:
                 GLib.spawn_command_line_async(command)
             except Exception as e:
-                print(_(ERR_SPAWN) % command)
+                print(g(ERR_SPAWN) % command)
                 print(e)
 
     # show a context menu for the treeview on right-click
@@ -336,16 +335,19 @@ class Configurator(Gtk.Application):
 
     # collect options and write them into the json file
     def __apply_cb(self):
-        dirname = os.path.dirname(self.file.get_path())
-        if os.path.exists(dirname):
-            if not os.path.isdir(dirname):
-                self.__show_error(_(ERR_TITLE), _(ERR_BASE_NOT_DIR))
+        cfgdir = Gio.file_new_for_path(GLib.path_get_dirname(
+                self.file.get_path()))
+
+        if cfgdir.query_exists(None):
+            if (cfgdir.query_file_type(Gio.FileQueryInfoFlags.NONE, None) !=
+                    Gio.FileType.DIRECTORY):
+                self.__show_error(g(ERR_TITLE), g(ERR_BASE_NOT_DIR))
                 return
         else:
             try:
-                os.makedirs(dirname)
-            except OSError as e:
-                self.__show_error(_(ERR_TITLE), _(ERR_CANT_MKDIR))
+                cfgdir.make_directory_with_parents(None)
+            except GObject.GError as e:
+                self.__show_error(g(ERR_TITLE), g(ERR_CANT_MKDIR))
                 return
 
         # collect new data from the status of the widgets. in this way we
@@ -376,23 +378,23 @@ class Configurator(Gtk.Application):
         try:
             encoded = str.encode(json.dumps(self.options))
             GLib.file_set_contents(self.file.get_path(), encoded)
-        except BaseException as write_error:
-            text = (_(ERR_FILE_WRITE) % (self.file.get_path(), write_error))
-            self.__show_error(_(ERR_TITLE), text)
+        except GObject.GError as write_error:
+            text = (g(ERR_FILE_WRITE) % (self.file.get_path(), write_error))
+            self.__show_error(g(ERR_TITLE), text)
             return
         self.__set_changed(False)
 
     # reload options from the json file ditching changes
     def __reload_cb(self):
         dialog = Gtk.Dialog()
-        dialog.set_title(_(RELOAD_DIALOG))
+        dialog.set_title(g(RELOAD_DIALOG))
         dialog.set_modal(True)
         dialog.set_destroy_with_parent(True)
         dialog.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
         dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 
         dialog.set_default_response(Gtk.ResponseType.CANCEL)
-        dialog.get_content_area().add(Gtk.Label(_(RELOAD_TEXT)))
+        dialog.get_content_area().add(Gtk.Label(g(RELOAD_TEXT)))
         dialog.set_transient_for(self.win)
         dialog.show_all()
 
@@ -412,14 +414,14 @@ class Configurator(Gtk.Application):
         if self.config_changed:
             # emulating gtk_dialog_new_with_buttons()
             dialog = Gtk.Dialog()
-            dialog.set_title(_(QUIT_DIALOG))
+            dialog.set_title(g(QUIT_DIALOG))
             dialog.set_modal(True)
             dialog.set_destroy_with_parent(True)
             dialog.add_button(Gtk.STOCK_OK, Gtk.ResponseType.OK)
             dialog.add_button(Gtk.STOCK_CANCEL, Gtk.ResponseType.CANCEL)
 
             dialog.set_default_response(Gtk.ResponseType.CANCEL)
-            dialog.get_content_area().add(Gtk.Label(_(QUIT_TEXT)))
+            dialog.get_content_area().add(Gtk.Label(g(QUIT_TEXT)))
             dialog.set_transient_for(self.win)
             dialog.show_all()
 
@@ -502,7 +504,7 @@ class Configurator(Gtk.Application):
         self.button_close.grab_focus()
 
         win = Gtk.Window(type = Gtk.WindowType.TOPLEVEL)
-        win.set_title(_(WINDOW_TITLE))
+        win.set_title(g(WINDOW_TITLE))
         win.set_size_request(SIZE['x'], SIZE['y'])
         win.add(win_vbox)
         win.set_border_width(PADDING)
@@ -516,40 +518,40 @@ class Configurator(Gtk.Application):
     def __build_popup(self):
         self.popup_menu = Gtk.Menu()
         self.item_new = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_NEW, None)
-        self.item_new.set_label(_(NEW_PROFILE_TEXT))
+        self.item_new.set_label(g(NEW_PROFILE_TEXT))
         self.item_new.connect('activate', lambda d:
                 self.__on_new_cb())
         self.popup_menu.add(self.item_new)
         self.item_edit = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_EDIT, None)
-        self.item_edit.set_label(_(EDIT_PROFILE_TEXT))
+        self.item_edit.set_label(g(EDIT_PROFILE_TEXT))
         self.item_edit.set_sensitive(False)
         self.item_edit.connect('activate', lambda d:
                 self.__on_edit_cb())
         self.popup_menu.add(self.item_edit)
         self.item_browse = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_OPEN,
                 None)
-        self.item_browse.set_label(_(BROWSE_PROFILE_TEXT))
+        self.item_browse.set_label(g(BROWSE_PROFILE_TEXT))
         self.item_browse.set_sensitive(False)
         self.item_browse.connect('activate', lambda d:
                 self.__on_browse_cb())
         self.popup_menu.add(self.item_browse)
         self.item_delete = Gtk.ImageMenuItem.new_from_stock(Gtk.STOCK_DELETE,
                 None)
-        self.item_delete.set_label(_(DELETE_PROFILE_BTN_TEXT))
+        self.item_delete.set_label(g(DELETE_PROFILE_BTN_TEXT))
         self.item_delete.set_sensitive(False)
         self.item_delete.connect('activate', lambda d:
                 self.__on_delete_cb())
         self.popup_menu.add(self.item_delete)
         self.item_manage = Gtk.ImageMenuItem.new_from_stock(
             Gtk.STOCK_PREFERENCES, None)
-        self.item_manage.set_label(_(MANAGE_PROFILE_TEXT))
+        self.item_manage.set_label(g(MANAGE_PROFILE_TEXT))
         self.item_manage.set_sensitive(False)
         self.popup_menu.add(self.item_manage)
         self.popup_menu.show_all()
 
     # create and place the widgets for the upper part of the dialog
     def __build_controls(self):
-        label = _(ICON_SIZE_TEXT)
+        label = g(ICON_SIZE_TEXT)
         icon_size_label = Gtk.Label(label)
         self.icon_size_spin = Gtk.SpinButton.new_with_range(SPIN_START,
             SPIN_END, SPIN_STEP)
@@ -557,12 +559,12 @@ class Configurator(Gtk.Application):
         icon_size_box.pack_start(icon_size_label, False, True, PADDING)
         icon_size_box.pack_start(self.icon_size_spin, False, True, PADDING)
 
-        self.def_profile = Gtk.CheckButton.new_with_label(_(DEF_PROFILE_TEXT))
-        self.split_view = Gtk.CheckButton.new_with_label(_(SPLIT_VIEW_TEXT))
-        self.show_icons = Gtk.CheckButton.new_with_label(_(SHOW_ICONS_TEXT))
+        self.def_profile = Gtk.CheckButton.new_with_label(g(DEF_PROFILE_TEXT))
+        self.split_view = Gtk.CheckButton.new_with_label(g(SPLIT_VIEW_TEXT))
+        self.show_icons = Gtk.CheckButton.new_with_label(g(SHOW_ICONS_TEXT))
         self.hide_non_xdg = Gtk.CheckButton.new_with_label(
-                _(HIDE_NON_XDG_TEXT))
-        self.manage_default = Gtk.Button.new_with_label(_(MANAGE_DEFAULT))
+                g(HIDE_NON_XDG_TEXT))
+        self.manage_default = Gtk.Button.new_with_label(g(MANAGE_DEFAULT))
         image = Gtk.Image.new_from_stock(Gtk.STOCK_PREFERENCES,
                 Gtk.IconSize.BUTTON)
         self.manage_default.set_image(image)
@@ -596,7 +598,7 @@ class Configurator(Gtk.Application):
     # create and place the buttons for the bottom part of the dialog
     def __build_button_row(self):
         # leftward button
-        self.button_reload = Gtk.Button.new_with_label(_(RELOAD_BTN_TEXT))
+        self.button_reload = Gtk.Button.new_with_label(g(RELOAD_BTN_TEXT))
         image = Gtk.Image.new_from_stock(Gtk.STOCK_REFRESH, Gtk.IconSize.BUTTON)
         self.button_reload.set_image(image)
 
@@ -638,7 +640,7 @@ class Configurator(Gtk.Application):
         
         # emulating gtk_tree_view_insert_column_with_attributes()
         column1 = Gtk.TreeViewColumn()
-        column1.set_title(_(PROFILE_NAME))
+        column1.set_title(g(PROFILE_NAME))
         column1.pack_start(self.name_column, True)
         column1.add_attribute(self.name_column, 'text', COLUMN['name'])
         self.profile_view.insert_column(column1, ColumnIds.LEFT)
@@ -649,7 +651,7 @@ class Configurator(Gtk.Application):
 
         # emulating gtk_tree_view_insert_column_with_attributes()
         column2 = Gtk.TreeViewColumn()
-        column2.set_title(_(PROFILE_DIR))
+        column2.set_title(g(PROFILE_DIR))
         column2.pack_start(self.dir_column, True)
         column2.add_attribute(self.dir_column, 'text', COLUMN['dir'])
         self.profile_view.insert_column(column2, ColumnIds.RIGHT)
@@ -666,15 +668,15 @@ class Configurator(Gtk.Application):
                 lambda w, e: self.__on_button_pressed_cb(e))
 
         self.tbtn_new = Gtk.ToolButton.new_from_stock(Gtk.STOCK_NEW)
-        self.tbtn_new.set_tooltip_text(_(NEW_PROFILE_TEXT))
+        self.tbtn_new.set_tooltip_text(g(NEW_PROFILE_TEXT))
         self.tbtn_edit = Gtk.ToolButton.new_from_stock(Gtk.STOCK_EDIT)
-        self.tbtn_edit.set_tooltip_text(_(EDIT_PROFILE_TEXT))
+        self.tbtn_edit.set_tooltip_text(g(EDIT_PROFILE_TEXT))
         self.tbtn_browse = Gtk.ToolButton.new_from_stock(Gtk.STOCK_OPEN)
-        self.tbtn_browse.set_tooltip_text(_(BROWSE_PROFILE_TEXT))
+        self.tbtn_browse.set_tooltip_text(g(BROWSE_PROFILE_TEXT))
         self.tbtn_del = Gtk.ToolButton.new_from_stock(Gtk.STOCK_DELETE)
-        self.tbtn_del.set_tooltip_text(_(DELETE_PROFILE_BTN_TEXT))
+        self.tbtn_del.set_tooltip_text(g(DELETE_PROFILE_BTN_TEXT))
         self.tbtn_manage = Gtk.ToolButton.new_from_stock(Gtk.STOCK_PREFERENCES)
-        self.tbtn_manage.set_tooltip_text(_(MANAGE_PROFILE_TEXT))
+        self.tbtn_manage.set_tooltip_text(g(MANAGE_PROFILE_TEXT))
         self.tbtn_new.connect('clicked', lambda d:
                 self.__on_new_cb())
         self.tbtn_edit.connect('clicked', lambda d:
@@ -717,24 +719,24 @@ class Configurator(Gtk.Application):
         self.__set_changed(False)
 
         if not (file.query_exists(None)):
-            self.__show_error(_(ERR_TITLE),
-                    (_(ERR_FILE_NOT_FOUND) % file_name))
+            self.__show_error(g(ERR_TITLE),
+                    (g(ERR_FILE_NOT_FOUND) % file_name))
             self.options = DEFAULT_OPTIONS
             self.__set_changed(True)
         else:
             try:
                 ret, data, _ = file.load_contents(None)
-            except BaseException as e:
-                self.__show_error(_(ERR_TITLE),
-                        (_(ERR_FILE_UNREADABLE) % file_name))
+            except GObject.GError as e:
+                self.__show_error(g(ERR_TITLE),
+                        (g(ERR_FILE_UNREADABLE) % file_name))
                 self.__set_changed(True)
                 self.options = DEFAULT_OPTIONS
             else:
                 try:
                     self.options = json.loads(data.decode('utf-8'))
                 except ValueError as e:
-                    self.__show_error(_(ERR_TITLE), (
-                            _(ERR_BAD_FORMAT) % file_name))
+                    self.__show_error(g(ERR_TITLE), 
+                            g(ERR_BAD_FORMAT) % file_name)
                     self.__set_changed(True)
                     self.options = DEFAULT_OPTIONS
 
@@ -774,7 +776,7 @@ class Configurator(Gtk.Application):
                 DEFAULT_OPTIONS['profiles']):
             keys.append('profiles')
         if keys != []:
-            error1_text = _(ERR_KEYS_START)
+            error1_text = g(ERR_KEYS_START)
             for i in range(len(keys)):
                 error1_text += keys[i] + '\n'
             error1_text += '\n'
@@ -790,16 +792,16 @@ class Configurator(Gtk.Application):
                     '')) or (check_and_set(self.options['profiles'][i],
                     'directory', type_str, '')):
                 del self.options['profiles'][i : i + 1]
-                error2_text += (_(ERR_BAD_PROFILE) % (j + 1))
+                error2_text += (g(ERR_BAD_PROFILE) % (j + 1))
             else:
                 i += 1
             j += 1
         if error2_text != '':
-            error2_text = _(ERR_ENTRY_START) % error2_text
+            error2_text = g(ERR_ENTRY_START) % error2_text
 
         error_text = error1_text + error2_text
         if error_text != '':
-            self.__show_error(_(ERR_TITLE), error_text)
+            self.__show_error(g(ERR_TITLE), error_text)
 
         # setup ui according to the options
         self.icon_size_spin.set_value(self.options['icon-size'])
@@ -817,21 +819,29 @@ class Configurator(Gtk.Application):
                     self.options['profiles'][i]['directory'])
 
 def main():
-    usage = _(ERR_USAGE)
-    parser = OptionParser(usage)
-    parser.add_option('-f', '--file', dest='filename', action='store',
-            help=_(ERR_FILE_HELP))
-    (options, args) = parser.parse_args()
-
-    if len(args) != 0:
-        parser.error(_(ERR_WRONG_ARGS))
+    parser = OptionParser("",
+            description = g(ERR_USAGE),
+            option_list = [
+                make_option('--file', '-f',
+                    type = 'filename',
+                    action = 'store',
+                    dest = 'filename',
+                    help=g(ERR_FILE_HELP)
+                )
+            ])
+    try:
+        parser.parse_args()
+    except Exception as e:
+        sys.stderr.write("%s\n" % g(ERR_WRONG_ARGS))
         return
 
-    if options.filename == None:
-        options.filename = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
-        sys.stderr.write(_(WARN_DEF_OPT_FILE) % options.filename)
+    if parser.values.filename == None:
+        filename = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
+        sys.stderr.write(g(WARN_DEF_OPT_FILE) % filename)
+    else:
+        filename = parser.values.filename
 
-    configurator = Configurator(options.filename)
+    configurator = Configurator(filename)
     configurator.run(None)
 
 if __name__ == '__main__':
