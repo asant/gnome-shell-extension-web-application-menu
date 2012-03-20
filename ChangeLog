@@ -1,3 +1,9 @@
+* Tue Mar 20 2012
+- optparse module replaced by the pygobject GOptionContext wrapper
+- hashlib.md5 replaced by the faster GQuark hashing
+- os file operation replaced by GFile functions
+- function _() renamed to g() as it clashes with the _ built-in symbol
+
 * Mon Mar 19 2012
 - Italian localization
 
