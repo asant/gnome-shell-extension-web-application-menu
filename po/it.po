@@ -188,8 +188,8 @@ msgstr ""
 "%s"
 
 #: ../src/webappmenu-setup.py:64
-msgid "use data from JSONFILE for reading and writing"
-msgstr "usa i dati da JSONFILE per la lettura e la scrittura"
+msgid "use data from the json file for reading and writing"
+msgstr "usa i dati dal file json per la lettura e la scrittura"
 
 #: ../src/webappmenu-setup.py:65
 #, c-format
@@ -232,8 +232,8 @@ msgid "Error"
 msgstr "Errore"
 
 #: ../src/webappmenu-setup.py:73
-msgid "usage: %prog -f <jsonfile>"
-msgstr "uso: %prog -f <jsonfile>"
+msgid "- configurator for the web application menu"
+msgstr "- configuratore per il menu applicazioni web"
 
 #: ../src/webappmenu-setup.py:74
 msgid "Wrong arguments"

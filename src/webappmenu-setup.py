@@ -59,7 +59,7 @@ initialized to their default values."
 ERR_BASE_NOT_DIR    = "The base path is not a directory!"
 ERR_CANT_MKDIR      = "Could not create the base directory!"
 ERR_ENTRY_START     = "Problems detecting the following entries:\n%s"
-ERR_FILE_HELP       = "use data from JSONFILE for reading and writing"
+ERR_FILE_HELP       = "use data from the json file for reading and writing"
 ERR_FILE_NOT_FOUND  = "WARNING: file \"%s\" not found!\nOptions initialized \
 to their default values."
 ERR_FILE_WRITE      = "Error writing to file \"%s\":\n%s"
@@ -68,7 +68,7 @@ initialized to their default values."
 ERR_KEYS_START      = "Problems retrieving values for the following keys:\n"
 ERR_SPAWN           = "Spawning failure for command: %s"
 ERR_TITLE           = "Error"
-ERR_USAGE           = "usage: %prog -f <jsonfile>"
+ERR_USAGE           = "- configurator for the web application menu"
 ERR_WRONG_ARGS      = "Wrong arguments"
 WARN_DEF_OPT_FILE   = "File name not specified, using %s by default.\n"
 
@@ -121,22 +121,13 @@ class ColumnIds:
     NUM     = 2
 
 class Configurator(Gtk.Application):
-    def __init__(self, filename):
+    def __init__(self, filename, locale_dir):
         self.filename = filename
         self.file = Gio.file_new_for_path(self.filename)
         self.id = deque()
 
-        # look for an existing locale directory
-        data_dirs = [ GLib.path_get_dirname(self.file.get_path()) ]
-        data_dirs += GLib.get_system_data_dirs()
-        for i in range(len(data_dirs)):
-            directory = Gio.file_new_for_path(GLib.build_filenamev(
-                    [data_dirs[i], LOCALE_SUBDIR]))
-            if (directory.query_exists(None) and
-                    directory.query_file_type(Gio.FileQueryInfoFlags.NONE,
-                    None)):
-                gettext.bindtextdomain(EXTENSION_UUID, directory.get_path())
-                break
+        if locale_dir != None:
+            gettext.bindtextdomain(EXTENSION_UUID, locale_dir)
 
         # only an unique instance of this app is runnable for each json file.
         # now hash by using GQuark
@@ -819,8 +810,23 @@ class Configurator(Gtk.Application):
                     self.options['profiles'][i]['directory'])
 
 def main():
-    parser = OptionParser("",
-            description = g(ERR_USAGE),
+    default_path = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
+
+    # look for an existing locale directory
+    data_dirs = [ GLib.path_get_dirname(default_path) ]
+    data_dirs += GLib.get_system_data_dirs()
+    locale_dir = None
+    for i in range(len(data_dirs)):
+        directory = Gio.file_new_for_path(GLib.build_filenamev([data_dirs[i],
+            LOCALE_SUBDIR]))
+        if (directory.query_exists(None) and
+                directory.query_file_type(Gio.FileQueryInfoFlags.NONE, None)):
+            locale_dir = directory.get_path()
+            gettext.bindtextdomain(EXTENSION_UUID, locale_dir)
+            break
+
+    parser = OptionParser(g(ERR_USAGE),
+            description = "",
             option_list = [
                 make_option('--file', '-f',
                     type = 'filename',
@@ -836,12 +842,12 @@ def main():
         return
 
     if parser.values.filename == None:
-        filename = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
+        filename = default_path
         sys.stderr.write(g(WARN_DEF_OPT_FILE) % filename)
     else:
         filename = parser.values.filename
 
-    configurator = Configurator(filename)
+    configurator = Configurator(filename, locale_dir)
     configurator.run(None)
 
 if __name__ == '__main__':

@@ -3,6 +3,9 @@
 - hashlib.md5 replaced by the faster GQuark hashing
 - os file operation replaced by GFile functions
 - function _() renamed to g() as it clashes with the _ built-in symbol
+- fixed a problem preventing localization from showing on option help
+- Italian localization adapted to the latest option changes
+- script for local installation fixed
 
 * Mon Mar 19 2012
 - Italian localization

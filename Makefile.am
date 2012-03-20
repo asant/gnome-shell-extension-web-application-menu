@@ -25,16 +25,13 @@ zip-file: all
 localprefix = $(HOME)/.local/share/gnome-shell/extensions
 
 local-install: zip-file
-	for i in $(ENABLED_EXTENSIONS); do \
-	    uuid="$${i}$(extensionbase)"; \
-		long_name=gnome-shell-extension-$(extension_name); \
-	    zip_file="$(abs_builddir)/zip-files/$(long_name)"; \
-	    if [ -d "$(localprefix)/$${uuid}" ]; then \
-		rm -fR "$(localprefix)/$${uuid}"; \
-	    fi; \
-	    $(MKDIR_P) $(localprefix)/$${uuid}; \
-	    (cd $(localprefix)/$${uuid}; \
-		unzip -q $${zip_file}; \
-	    ); \
-	done
+	long_name=gnome-shell-extension-$(extension_name); \
+	if [ -d "$(localprefix)/${uuid}" ]; then \
+	rm -fR "$(localprefix)/${uuid}"; \
+	fi; \
+	$(MKDIR_P) $(localprefix)/${uuid}; \
+	pushd $(localprefix)/${uuid}; \
+	echo $(zip_file); \
+	unzip -q "$(abs_builddir)/zip-files/gnome-shell-extension-$(extension_name)"; \
+	popd
 
