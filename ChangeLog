@@ -1,3 +1,8 @@
+* Wed Mar 21 2012
+- Totally new layout for the configuration utility
+- Added a localization template
+- Italian translation adapted to the last changes again
+
 * Tue Mar 20 2012
 - optparse module replaced by the pygobject GOptionContext wrapper
 - hashlib.md5 replaced by the faster GQuark hashing
