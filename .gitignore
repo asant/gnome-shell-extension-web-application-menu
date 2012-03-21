@@ -6,7 +6,6 @@ config.log
 config.status
 aclocal.m4
 autom4te.cache/
-po/gnome-shell-extension-web-application-menu.pot
 po/POTFILES
 po/stamp-it
 staging/
