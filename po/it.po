@@ -69,8 +69,8 @@ msgid "Add profile"
 msgstr "Aggiungi profilo"
 
 #: ../src/webappmenu-setup.py:30
-msgid "Use default profile"
-msgstr "Usa profilo principale"
+msgid "Use the default profile"
+msgstr "Usa il profilo principale"
 
 #: ../src/webappmenu-setup.py:31
 msgid "Row deletion"
@@ -85,8 +85,8 @@ msgid "Browse directories"
 msgstr "Cerca cartella"
 
 #: ../src/webappmenu-setup.py:34
-msgid "Hide entries not in xdg path"
-msgstr "Nascondi elementi non nel percorso xdg"
+msgid "Hide entries not in user's application path"
+msgstr "Nascondi elementi non tra le applicazioni dell'utente"
 
 #: ../src/webappmenu-setup.py:35
 msgid "Icon size"
@@ -117,12 +117,12 @@ msgid "Your changes will be lost! Continue?"
 msgstr "I cambiamenti saranno persi! Continuare?"
 
 #: ../src/webappmenu-setup.py:42
-msgid "Show icons"
-msgstr "Mostra icone"
+msgid "Show entry icons"
+msgstr "Mostra le icone degli elementi"
 
 #: ../src/webappmenu-setup.py:43
-msgid "Split profile view"
-msgstr "Suddividi la vista in profili"
+msgid "Share the view out among profiles"
+msgstr "Suddividi la vista tra i profili"
 
 #: ../src/webappmenu-setup.py:44
 msgid "General"
@@ -149,8 +149,8 @@ msgid "Edit"
 msgstr "Modifica"
 
 #: ../src/webappmenu-setup.py:52
-msgid "Manage default"
-msgstr "Gestisci profilo predefinito"
+msgid "Manage default profile"
+msgstr "Gestisci il profilo predefinito"
 
 #: ../src/webappmenu-setup.py:53
 msgid "Manage applications"

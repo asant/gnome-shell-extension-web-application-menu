@@ -1,5 +1,6 @@
 * Wed Mar 21 2012
 - Totally new layout for the configuration utility
+- More informative base strings
 - Added a localization template
 - Italian translation adapted to the last changes again
 - Local installation shall not overwrite settings.json

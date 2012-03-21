@@ -68,7 +68,7 @@ msgid "Add profile"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:30
-msgid "Use default profile"
+msgid "Use the default profile"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:31
@@ -84,7 +84,7 @@ msgid "Browse directories"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:34
-msgid "Hide entries not in xdg path"
+msgid "Hide entries not in user's application path"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:35
@@ -116,11 +116,11 @@ msgid "Your changes will be lost! Continue?"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:42
-msgid "Show icons"
+msgid "Show entry icons"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:43
-msgid "Split profile view"
+msgid "Share the view out among profiles"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:44
@@ -148,7 +148,7 @@ msgid "Edit"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:52
-msgid "Manage default"
+msgid "Manage default profile"
 msgstr ""
 
 #: ../src/webappmenu-setup.py:53
