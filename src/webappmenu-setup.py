@@ -41,6 +41,8 @@ RELOAD_DIALOG           = "Really reload?"
 RELOAD_TEXT             = "Your changes will be lost! Continue?"
 SHOW_ICONS_TEXT         = "Show icons"
 SPLIT_VIEW_TEXT         = "Split profile view"
+TAB_1_LABEL             = "General"
+TAB_2_LABEL             = "Other profiles"
 WINDOW_TITLE            = "Web App Menu Extension Options"
 
 # actions
@@ -104,21 +106,24 @@ SPIN_START  = 4.0
 SPIN_STEP   = 1.0
 
 # enums wannabe
-class TableRows:
-    LEFT    = 0
-    MIDDLE  = 1
-    RIGHT   = 2
-    NUM     = 3
-
-class TableColumns:
-    LEFT    = 0
-    RIGHT   = 1
-    NUM     = 2
-
 class ColumnIds:
     LEFT    = 0
     RIGHT   = 1
     NUM     = 2
+
+class ColumnAttach:
+    LEFT = 0
+    CENTER = 1
+    RIGHT = 2
+
+class TableSize:
+    ROWS = 6
+    COLUMNS = 2
+
+class MiscAlignment:
+    LEFT = 0.0
+    CENTER = 0.5
+    RIGHT = 1.0
 
 class Configurator(Gtk.Application):
     def __init__(self, filename, locale_dir):
@@ -443,11 +448,11 @@ class Configurator(Gtk.Application):
 
     # connect widgets to signals
     def __connect_all(self):
-        self.id.append(self.def_profile.connect('toggled', lambda t:
+        self.id.append(self.def_profile.connect('notify::active', lambda t, d:
                 self.__on_default_profile_toggle_cb()))
-        self.id.append(self.split_view.connect('toggled', lambda t:
+        self.id.append(self.split_view.connect('notify::active', lambda t, d:
                 self.__set_changed(True)))
-        self.id.append(self.show_icons.connect('toggled', lambda t:
+        self.id.append(self.show_icons.connect('notify::active', lambda t, d:
                 self.__set_changed(True)))
         self.id.append(self.icon_size_spin.connect('value-changed', lambda s:
                 self.__set_changed(True)))
@@ -459,7 +464,7 @@ class Configurator(Gtk.Application):
                 self.__reload_cb()))
         self.id.append(self.button_apply.connect('clicked', lambda w:
                 self.__apply_cb()))
-        self.id.append(self.hide_non_xdg.connect('toggled', lambda t:
+        self.id.append(self.hide_non_xdg.connect('notify::active', lambda t, d:
                 self.__set_changed(True)))
         self.id.append(self.selection.connect('changed', lambda d:
                 self.__on_select_cb()))
@@ -487,10 +492,15 @@ class Configurator(Gtk.Application):
     def __build_main_window(self):
         self.__build_popup()
 
+        notebook = Gtk.Notebook()
+        notebook.append_page(self.__build_controls(),
+                Gtk.Label(g(TAB_1_LABEL)))
+        notebook.append_page(self.__build_profile_section(),
+                Gtk.Label(g(TAB_2_LABEL)))
+
         # the whole window contents in a box
         win_vbox = Gtk.VBox(homogeneous = False, spacing = SPACING)
-        win_vbox.pack_start(self.__build_controls(), False, True, PADDING)
-        win_vbox.pack_start(self.__build_profile_section(), True, True, PADDING)
+        win_vbox.pack_start(notebook, True, True, PADDING)
         win_vbox.pack_start(self.__build_button_row(), False, True, PADDING)
         self.button_close.grab_focus()
 
@@ -498,6 +508,7 @@ class Configurator(Gtk.Application):
         win.set_title(g(WINDOW_TITLE))
         win.set_size_request(SIZE['x'], SIZE['y'])
         win.add(win_vbox)
+        
         win.set_border_width(PADDING)
         win.set_position(Gtk.WindowPosition.CENTER)
         pixbuf = win.render_icon(Gtk.STOCK_PREFERENCES, Gtk.IconSize.DIALOG)
@@ -542,48 +553,61 @@ class Configurator(Gtk.Application):
 
     # create and place the widgets for the upper part of the dialog
     def __build_controls(self):
-        label = g(ICON_SIZE_TEXT)
-        icon_size_label = Gtk.Label(label)
+        icon_size_label = Gtk.Label(g(ICON_SIZE_TEXT))
         self.icon_size_spin = Gtk.SpinButton.new_with_range(SPIN_START,
             SPIN_END, SPIN_STEP)
-        icon_size_box = Gtk.HBox(True, SPACING)
-        icon_size_box.pack_start(icon_size_label, False, True, PADDING)
-        icon_size_box.pack_start(self.icon_size_spin, False, True, PADDING)
-
-        self.def_profile = Gtk.CheckButton.new_with_label(g(DEF_PROFILE_TEXT))
-        self.split_view = Gtk.CheckButton.new_with_label(g(SPLIT_VIEW_TEXT))
-        self.show_icons = Gtk.CheckButton.new_with_label(g(SHOW_ICONS_TEXT))
-        self.hide_non_xdg = Gtk.CheckButton.new_with_label(
-                g(HIDE_NON_XDG_TEXT))
-        self.manage_default = Gtk.Button.new_with_label(g(MANAGE_DEFAULT))
-        image = Gtk.Image.new_from_stock(Gtk.STOCK_PREFERENCES,
-                Gtk.IconSize.BUTTON)
-        self.manage_default.set_image(image)
+        
+        def_profile_label = Gtk.Label(g(DEF_PROFILE_TEXT))
+        self.def_profile = Gtk.Switch()
+        
+        split_view_label = Gtk.Label(g(SPLIT_VIEW_TEXT))
+        self.split_view = Gtk.Switch()
+        
+        show_icons_label = Gtk.Label(g(SHOW_ICONS_TEXT))
+        self.show_icons = Gtk.Switch()
+        
+        hide_non_xdg_label = Gtk.Label(g(HIDE_NON_XDG_TEXT))
+        self.hide_non_xdg = Gtk.Switch()
+        
+        self.manage_default = Gtk.Button(g(MANAGE_DEFAULT))
+        
+        manage_default_label = Gtk.Label(g(MANAGE_DEFAULT))
+        self.manage_default = Gtk.Button.new_from_stock(Gtk.STOCK_OPEN)
         self.manage_default.connect('clicked', lambda w:
                 GLib.spawn_command_line_async('epiphany about:applications'))
+        
+        table = Gtk.Table(TableSize.ROWS, TableSize.COLUMNS, False)
 
-        table = Gtk.Table(TableRows.NUM, TableColumns.NUM, True)
-        table.attach(self.def_profile, TableColumns.LEFT, TableColumns.RIGHT,
-                TableRows.LEFT, TableRows.MIDDLE, Gtk.AttachOptions.FILL,
+        top_attach = 0
+        bottom_attach = 1
+
+        def add_row(label, control, y1, y2):
+            table.attach(label, ColumnAttach.LEFT, ColumnAttach.CENTER, y1, y2,
+                Gtk.AttachOptions.FILL | Gtk.AttachOptions.EXPAND,
                 Gtk.AttachOptions.SHRINK, PADDING, PADDING)
-        table.attach(self.split_view, TableColumns.LEFT, TableColumns.RIGHT,
-                TableRows.MIDDLE, TableRows.RIGHT, Gtk.AttachOptions.FILL,
-                Gtk.AttachOptions.SHRINK, PADDING, PADDING)
-        table.attach(self.show_icons, TableColumns.RIGHT, TableColumns.NUM,
-                TableRows.LEFT, TableRows.MIDDLE, Gtk.AttachOptions.FILL,
-                Gtk.AttachOptions.SHRINK, PADDING, PADDING)
-        table.attach(self.hide_non_xdg, TableColumns.RIGHT, TableColumns.NUM,
-                TableRows.MIDDLE, TableRows.RIGHT, Gtk.AttachOptions.FILL,
-                Gtk.AttachOptions.SHRINK, PADDING, PADDING)
-        table.attach(icon_size_box, TableColumns.LEFT, TableColumns.RIGHT,
-                TableRows.RIGHT, TableRows.NUM, Gtk.AttachOptions.FILL,
-                Gtk.AttachOptions.SHRINK, PADDING, PADDING)
-        table.attach(self.manage_default,TableColumns.RIGHT, TableColumns.NUM,
-                TableRows.RIGHT, TableRows.NUM, Gtk.AttachOptions.FILL,
-                Gtk.AttachOptions.SHRINK, PADDING, PADDING)
+            table.attach(control, ColumnAttach.CENTER, ColumnAttach.RIGHT,
+                y1, y2, Gtk.AttachOptions.FILL, Gtk.AttachOptions.SHRINK,
+                PADDING, PADDING)
+            label.set_alignment(MiscAlignment.LEFT, MiscAlignment.CENTER)
+            return [ y1 + 1, y2 + 1]
+        
+        [ top_attach, bottom_attach ] = add_row(def_profile_label,
+            self.def_profile, top_attach, bottom_attach)
+        [ top_attach, bottom_attach ] = add_row(split_view_label,
+            self.split_view, top_attach, bottom_attach)
+        [ top_attach, bottom_attach ] = add_row(show_icons_label,
+            self.show_icons, top_attach, bottom_attach)
+        [ top_attach, bottom_attach ] = add_row(hide_non_xdg_label,
+            self.hide_non_xdg, top_attach, bottom_attach)
+        [ top_attach, bottom_attach ] = add_row(icon_size_label,
+            self.icon_size_spin, top_attach, bottom_attach)
+        [ top_attach, bottom_attach ] = add_row(manage_default_label,
+            self.manage_default, top_attach, bottom_attach)
+
         table.set_property('row-spacing', SPACING)
         table.set_property('column-spacing', SPACING)
-
+        table.set_property('border-width', 2 * PADDING)
+        
         return table
 
     # create and place the buttons for the bottom part of the dialog
@@ -682,22 +706,23 @@ class Configurator(Gtk.Application):
                 self.__on_manage_cb())
         
         toolbar = Gtk.Toolbar()
-        toolbar.set_orientation(Gtk.Orientation.VERTICAL)
+        toolbar.set_orientation(Gtk.Orientation.HORIZONTAL)
         toolbar.set_style(Gtk.ToolbarStyle.ICONS)
         toolbar.add(self.tbtn_new)
         toolbar.add(self.tbtn_edit)
         toolbar.add(self.tbtn_browse)
         toolbar.add(self.tbtn_del)
         toolbar.add(self.tbtn_manage)
+        toolbar.get_style_context().add_class(Gtk.STYLE_CLASS_PRIMARY_TOOLBAR)
 
         self.tbtn_edit.set_sensitive(False)
         self.tbtn_browse.set_sensitive(False)
         self.tbtn_del.set_sensitive(False)
         self.tbtn_manage.set_sensitive(False)
 
-        hbox = Gtk.HBox(False, SPACING)
-        hbox.pack_start(sw, True, True, PADDING)
-        hbox.pack_start(toolbar, False, False, PADDING)
+        hbox = Gtk.VBox(False, SPACING)
+        hbox.pack_start(toolbar, False, False, 0)
+        hbox.pack_start(sw, True, True, 0)
 
         return hbox
 
