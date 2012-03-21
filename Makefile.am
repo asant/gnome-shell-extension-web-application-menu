@@ -25,13 +25,17 @@ zip-file: all
 localprefix = $(HOME)/.local/share/gnome-shell/extensions
 
 local-install: zip-file
-	long_name=gnome-shell-extension-$(extension_name); \
+	$(MKDIR_P) "$(abs_builddir)/_local-install"; \
+	pushd "$(abs_builddir)/_local-install"; \
+	unzip -o -q "$(abs_builddir)/zip-files/gnome-shell-extension-$(extension_name)"; \
+	popd; \
 	if [ -d "$(localprefix)/${uuid}" ]; then \
+	if [ -f "$(localprefix)/${uuid}/settings.json" ]; then \
+	cp -f "$(localprefix)/${uuid}/settings.json" -t "$(abs_builddir)/_local-install"; \
+	fi; \
 	rm -fR "$(localprefix)/${uuid}"; \
 	fi; \
 	$(MKDIR_P) $(localprefix)/${uuid}; \
-	pushd $(localprefix)/${uuid}; \
-	echo $(zip_file); \
-	unzip -q "$(abs_builddir)/zip-files/gnome-shell-extension-$(extension_name)"; \
-	popd
+	cp -a --remove-destination "$(abs_builddir)/_local-install"/* -t "$(localprefix)/${uuid}"; \
+	rm -rf "$(abs_builddir)/_local-install"
 
