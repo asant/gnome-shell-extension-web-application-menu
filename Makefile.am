@@ -31,11 +31,15 @@ local-install: zip-file
 	popd; \
 	if [ -d "$(localprefix)/${uuid}" ]; then \
 	if [ -f "$(localprefix)/${uuid}/settings.json" ]; then \
-	cp -f "$(localprefix)/${uuid}/settings.json" -t "$(abs_builddir)/_local-install"; \
+	cp --remove-destination "$(localprefix)/${uuid}/settings.json" -t "$(abs_builddir)/_local-install"; \
 	fi; \
 	rm -fR "$(localprefix)/${uuid}"; \
 	fi; \
 	$(MKDIR_P) $(localprefix)/${uuid}; \
 	cp -a --remove-destination "$(abs_builddir)/_local-install"/* -t "$(localprefix)/${uuid}"; \
 	rm -rf "$(abs_builddir)/_local-install"
+
+clean-local:
+	-rm -rf zip-files ; \
+	rm -f po/*.gmo
 
