@@ -4,6 +4,8 @@
 - Added a localization template
 - Italian translation adapted to the last changes again
 - Local installation shall not overwrite settings.json
+- French localization
+- Release as version 10
 
 * Tue Mar 20 2012
 - optparse module replaced by the pygobject GOptionContext wrapper
