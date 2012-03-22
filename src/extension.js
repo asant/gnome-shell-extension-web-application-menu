@@ -37,12 +37,15 @@ const DIR_PREFIX            = APP_PREFIX + APP_NAME + '-';
 const ENTRY_EXT             = '.desktop';
 const GNOME_ENV             = 'GNOME';
 const LOCALE_SUBDIR         = 'locale';
+const LOCALE_EXT            = '.mo';
+const MSG_SUBDIR            = 'LC_MESSAGES';
 const SETTINGS_FILENAME     = 'settings.json';
 const SETUP                 = 'webappmenu-setup.py';
 const EXT_STATUS_AREA_ID    = 'webapps';
 const MENU_ALIGNMENT        = 0.5;
 const XDG_APP_DIR_PERMS     = 750;
 const FIELD_SIZE            = 1;
+const NEW_API_VERSION       = '3.3.90';
 
 /* default values */
 const DEFAULT_ICON_SIZE                     = 16;
@@ -521,24 +524,41 @@ WebAppExtension.prototype = {
 let webapps;
 let md;
 
+/* emulating python's gettext.find() behavior */
 function init_localizations(metadata) {
-    let data_dirs = new Array(metadata.path);
-    data_dirs = data_dirs.concat(GLib.get_system_data_dirs());
+    let domain = metadata.uuid;
+    let langs = GLib.get_language_names();
+    let locale_dirs = new Array(GLib.build_filenamev([metadata.path,
+            LOCALE_SUBDIR]));
 
     /* I prefer to fetch the uuid from the metadata instead of hardcoding it */
     Gettext = imports.gettext.domain(metadata.uuid);
     _ = Gettext.gettext;
 
-    for (let i = 0; i < data_dirs.length; i++) {
-        let dir = Gio.file_new_for_path(GLib.build_filenamev([ data_dirs[i],
-                LOCALE_SUBDIR ]));
+    /* check whether we're using the right shell version before trying to fetch 
+     * its locale directory */
+    if (imports.misc.config.PACKAGE_VERSION < NEW_API_VERSION) {
+        let data_dirs = GLib.get_system_data_dirs();
+        for (let i = 0; i < data_dirs.length; i++) {
+            locale_dirs = locale_dirs.concat([ GLib.build_filenamev([
+                    data_dirs[i], LOCALE_SUBDIR ]) ]);
+        }
+    } else {
+        locale_dirs = locale_dirs.concat([ imports.misc.config.LOCALEDIR ]);
+    }
 
-        if ((dir.query_exists(null)) && 
-                (dir.query_file_type(Gio.FileQueryInfoFlags.NONE, null) ==
-                Gio.FileType.DIRECTORY)) {
-            imports.gettext.bindtextdomain(metadata.uuid, dir.get_path());
-            imports.gettext.textdomain(metadata.uuid);
-            break;
+    for (let j = 0; j < locale_dirs.length; j++) {
+        for (let i = 0; i < langs.length; i++) {
+            let str = GLib.build_filenamev([ locale_dirs[j], langs[i],
+                    MSG_SUBDIR, domain ]) + LOCALE_EXT;
+            let file = Gio.file_new_for_path(str);
+
+            if (file.query_file_type(Gio.FileQueryInfoFlags.NONE, null) ==
+                    Gio.FileType.REGULAR) {
+                imports.gettext.bindtextdomain(domain, locale_dirs[j]);
+                imports.gettext.textdomain(domain);
+                return;
+            }
         }
     }
 }

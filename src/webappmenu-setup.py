@@ -848,25 +848,25 @@ def main():
     data_dirs = [ GLib.path_get_dirname(default_path) ]
     data_dirs += GLib.get_system_data_dirs()
     locale_dir = None
+
     for i in range(len(data_dirs)):
-        directory = Gio.file_new_for_path(GLib.build_filenamev([data_dirs[i],
-            LOCALE_SUBDIR]))
-        if (directory.query_exists(None) and
-                directory.query_file_type(Gio.FileQueryInfoFlags.NONE, None)):
-            locale_dir = directory.get_path()
-            gettext.bindtextdomain(EXTENSION_UUID, locale_dir)
+        directory = GLib.build_filenamev([data_dirs[i], LOCALE_SUBDIR])
+
+        if (gettext.find(EXTENSION_UUID, directory) != None):
+            locale_dir = directory
+            gettext.bindtextdomain(EXTENSION_UUID, directory)
             break
 
     parser = OptionParser(g(ERR_USAGE),
-            description = "",
-            option_list = [
-                make_option('--file', '-f',
-                    type = 'filename',
-                    action = 'store',
-                    dest = 'filename',
-                    help=g(ERR_FILE_HELP)
-                )
-            ])
+        description = "",
+        option_list = [
+            make_option('--file', '-f',
+                type = 'filename',
+                action = 'store',
+                dest = 'filename',
+                help=g(ERR_FILE_HELP)
+            )
+        ])
     try:
         parser.parse_args()
     except Exception as e:
