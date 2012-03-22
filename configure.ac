@@ -1,5 +1,5 @@
 AC_PREREQ(2.63)
-AC_INIT([gnome-shell-extension-web-application-menu],[10],[https://github.com/asant/gnome-shell-extension-web-application-menu])
+AC_INIT([gnome-shell-extension-web-application-menu],[11],[https://github.com/asant/gnome-shell-extension-web-application-menu])
 
 AC_CONFIG_MACRO_DIR([m4])
 AC_CONFIG_AUX_DIR([config])
