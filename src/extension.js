@@ -30,15 +30,19 @@ const Shell     = imports.gi.Shell;
 const St        = imports.gi.St;
 
 /* from epiphany (which took it from libgnome in its turn) */
-const GNOME_DOT_GNOME   = '.gnome2';
-const APP_NAME          = 'epiphany';
-const APP_PREFIX        = 'app-';
-const DIR_PREFIX        = APP_PREFIX + APP_NAME + '-';
-const ENTRY_EXT         = '.desktop';
-const GNOME_ENV         = 'GNOME';
-const LOCALE_SUBDIR     = 'locale';
-const SETTINGS_FILENAME = 'settings.json';
-const SETUP             = 'webappmenu-setup.py';
+const GNOME_DOT_GNOME       = '.gnome2';
+const APP_NAME              = 'epiphany';
+const APP_PREFIX            = 'app-';
+const DIR_PREFIX            = APP_PREFIX + APP_NAME + '-';
+const ENTRY_EXT             = '.desktop';
+const GNOME_ENV             = 'GNOME';
+const LOCALE_SUBDIR         = 'locale';
+const SETTINGS_FILENAME     = 'settings.json';
+const SETUP                 = 'webappmenu-setup.py';
+const EXT_STATUS_AREA_ID    = 'webapps';
+const MENU_ALIGNMENT        = 0.5;
+const XDG_APP_DIR_PERMS     = 750;
+const FIELD_SIZE            = 1;
 
 /* default values */
 const DEFAULT_ICON_SIZE                     = 16;
@@ -217,14 +221,14 @@ WebAppExtension.prototype = {
 
     _init: function(metadata, params)
     {
-        PanelMenu.Button.prototype._init.call(this, 0.0);
+        PanelMenu.Button.prototype._init.call(this, MENU_ALIGNMENT);
 
         /* setup according to the configuration file and monitor it for
          * changes */
         this.path = metadata.path;
         this.uuid = metadata.uuid;
-        this.config_file_path = GLib.build_filenamev([GLib.get_user_data_dir(),
-                'gnome-shell', 'extensions', this.uuid, SETTINGS_FILENAME]);
+        this.config_file_path = GLib.build_filenamev([metadata.path,
+                SETTINGS_FILENAME]);
         this.config_file = Gio.file_new_for_path(this.config_file_path);
         this._setup_values();
         this.monitor = this.config_file.monitor_file(
@@ -251,7 +255,7 @@ WebAppExtension.prototype = {
         this.sigcon = this._appSystem.connect('installed-changed',
                 Lang.bind(this, this._redisplay));
 
-        Main.panel.addToStatusArea('webapps', this);
+        Main.panel.addToStatusArea(EXT_STATUS_AREA_ID, this);
         this.set_tooltip(_(BROWSE_TEXT));
         this.menu.connect('open-state-changed', Lang.bind(this,
                 this._on_open_state_changed));
@@ -360,7 +364,7 @@ WebAppExtension.prototype = {
                     (this.options['profiles'][i]['directory'] == undefined) ||
                     (this.options['profiles'][i]['directory'].constructor
                     != String)) {
-                this.options['profiles'].splice(i, 1);
+                this.options['profiles'].splice(i, FIELD_SIZE);
             } else {
                 i++;
             }
@@ -416,8 +420,8 @@ WebAppExtension.prototype = {
             return;
         }
 
-	    enumerator = path.enumerate_children(
-                Gio.FILE_ATTRIBUTE_STANDARD_NAME, 0, null);
+	    enumerator = path.enumerate_children(Gio.FILE_ATTRIBUTE_STANDARD_NAME,
+                Gio.FileQueryInfoFlags.NONE, null);
 
         while ((info = enumerator.next_file(null))) {
             let element = info.get_name();
@@ -467,7 +471,7 @@ WebAppExtension.prototype = {
                 let xdgfile = Gio.file_new_for_path(xdgfile_path);
                 let xdgfile_info;
 
-                if (GLib.mkdir_with_parents(xdg_path, 750)) {
+                if (GLib.mkdir_with_parents(xdg_path, XDG_APP_DIR_PERMS)) {
                     global.log(_(ERROR_MKDIR_FAILED).format(xdg_path));
                     continue;
                 }

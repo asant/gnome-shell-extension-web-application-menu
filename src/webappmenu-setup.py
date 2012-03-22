@@ -84,8 +84,10 @@ DEFAULT_OPTIONS = {
     'profiles'                      : []
 }
 
-EXTENSION_UUID  = 'web-application-menu@atomant'
-LOCALE_SUBDIR   = 'locale'
+EXTENSION_UUID              = 'web-application-menu@atomant'
+HANDLE_MAIN_PROFILE_CMD     = 'epiphany about:applications'
+HANDLE_PROFILE_CMD          = 'epiphany -p --profile=\"%s\" about:applications'
+LOCALE_SUBDIR               = 'locale'
 
 DEFAULT_OPTION_FILE_PARTS = [ GLib.get_user_data_dir(), 'gnome-shell',
         'extensions', EXTENSION_UUID, 'settings.json' ]
@@ -124,6 +126,11 @@ class MiscAlignment:
     LEFT = 0.0
     CENTER = 0.5
     RIGHT = 1.0
+
+class MouseButtons:
+    LEFT = 1
+    CENTER = 2
+    RIGHT = 3
 
 class Configurator(Gtk.Application):
     def __init__(self, filename, locale_dir):
@@ -214,7 +221,7 @@ class Configurator(Gtk.Application):
                     entry2.get_text().strip() != '')
         def on_icon_press(entry, pos, event):
             # left button pressed
-            if event.button != 1:
+            if event.button != MouseButtons.LEFT:
                 return
             chooser = Gtk.FileChooserDialog()
             chooser.set_title(g(DIR_CHOOSER_TITLE))
@@ -313,7 +320,7 @@ class Configurator(Gtk.Application):
         res, i = self.selection.get_selected()
         if not(i is None):
             val = self.profile_store.get_value(i, COLUMN['dir'])
-            command = ('epiphany -p --profile=\"%s\" about:applications') % val
+            command = (HANDLE_PROFILE_CMD) % val
             print(command)
             try:
                 GLib.spawn_command_line_async(command)
@@ -324,7 +331,7 @@ class Configurator(Gtk.Application):
     # show a context menu for the treeview on right-click
     def __on_button_pressed_cb(self, e):
         # right mouse button
-        if e.button == 3:
+        if e.button == MouseButtons.RIGHT:
             self.popup_menu.popup(None, None, None, None, e.button, e.time)
             return True
         return False
@@ -574,7 +581,7 @@ class Configurator(Gtk.Application):
         manage_default_label = Gtk.Label(g(MANAGE_DEFAULT))
         self.manage_default = Gtk.Button.new_from_stock(Gtk.STOCK_OPEN)
         self.manage_default.connect('clicked', lambda w:
-                GLib.spawn_command_line_async('epiphany about:applications'))
+                GLib.spawn_command_line_async(HANDLE_MAIN_PROFILE_CMD))
         
         table = Gtk.Table(TableSize.ROWS, TableSize.COLUMNS, False)
 
