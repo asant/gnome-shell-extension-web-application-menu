@@ -525,12 +525,12 @@ let webapps;
 let md;
 
 function init_localizations(metadata) {
-    let domain = metadata.uuid;
+    /* fetch the domain from metadata */
+    let domain = metadata['gettext-domain'];
     let langs = GLib.get_language_names();
     let locale_dirs = new Array(GLib.build_filenamev([metadata.path,
             LOCALE_SUBDIR]));
 
-    /* I prefer to fetch the uuid from the metadata instead of hardcoding it */
     _ = imports.gettext.domain(domain).gettext;
 
     /* check whether we're using the right shell version before trying to fetch 

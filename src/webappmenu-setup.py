@@ -85,16 +85,14 @@ DEFAULT_OPTIONS = {
     'profiles'                      : []
 }
 
-EXTENSION_UUID              = 'web-application-menu@atomant'
 HANDLE_MAIN_PROFILE_CMD     = 'epiphany about:applications'
 HANDLE_PROFILE_CMD          = 'epiphany -p --profile=\"%s\" about:applications'
 LOCALE_SUBDIR               = 'locale'
 MD_NAME                     = 'metadata.json'
 
 DEFAULT_OPTION_FILE_PARTS = [ GLib.get_user_data_dir(), 'gnome-shell',
-        'extensions', EXTENSION_UUID, 'settings.json' ]
+        'extensions', 'web-application-menu@atomant', 'settings.json' ]
 
-gettext.textdomain(EXTENSION_UUID)
 # please don't use _() as it clashes with python's built-in _ symbol
 g = gettext.gettext
 
@@ -860,13 +858,16 @@ def main():
         if values['system-locale-dir'] != None:
             locale_dirs += values['system-locale-dir']
 
-    for i in range(len(locale_dirs)):
-        directory = Gio.file_new_for_path(locale_dirs[i])
+    if values['gettext-domain'] != None:
+        for i in range(len(locale_dirs)):
+            directory = Gio.file_new_for_path(locale_dirs[i])
 
-        if (directory.query_file_type(Gio.FileQueryInfoFlags.NONE, None) ==
-                Gio.FileType.DIRECTORY):
-            gettext.bindtextdomain(EXTENSION_UUID, directory.get_path())
-            break
+            if (directory.query_file_type(Gio.FileQueryInfoFlags.NONE, None) ==
+                    Gio.FileType.DIRECTORY):
+                gettext.textdomain(values['gettext-domain'])
+                gettext.bindtextdomain(values['gettext-domain'],
+                    directory.get_path())
+                break
 
     parser = OptionParser(g(ERR_USAGE),
         description = "",

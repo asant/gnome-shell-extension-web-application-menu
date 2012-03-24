@@ -7,6 +7,7 @@ metadata.json: metadata.json.in $(top_builddir)/config.status
 		-e "s|[@]extension_url@|$(extension_url)|" \
 		-e "s|[@]extension_version@|$(extension_version)|" \
 		-e "s|[@]system_locale_dir@|$(localedir)|" \
+		-e "s|[@]gettext_domain@|$(extension_name)|" \
 		$< > $@
 
 CLEANFILES = metadata.json
