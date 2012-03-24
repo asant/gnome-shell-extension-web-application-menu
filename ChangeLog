@@ -2,6 +2,11 @@
 - Default installation prefix shall be the same as GS's one.
 - Hardcode the system locale dir in metadata.json (via autotools)
 - In "legacy mode", fetch the system locale dir from metadata.json
+- Don't use the gettext.find()-like solution, just check for the locale dir
+- Rename the gettext domain from "name@ext" to "name"
+- Don't call textdomain() as it seems to conflict with other exts... go figure
+- Add v3.3.92 to the compatibility list.
+- Release as v12
 
 * Thu Mar 22 2012
 - More reliable localization directory detection.
