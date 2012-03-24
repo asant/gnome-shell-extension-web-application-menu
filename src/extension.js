@@ -524,7 +524,6 @@ WebAppExtension.prototype = {
 let webapps;
 let md;
 
-/* emulating python's gettext.find() behavior */
 function init_localizations(metadata) {
     let domain = metadata.uuid;
     let langs = GLib.get_language_names();
@@ -532,16 +531,13 @@ function init_localizations(metadata) {
             LOCALE_SUBDIR]));
 
     /* I prefer to fetch the uuid from the metadata instead of hardcoding it */
-    Gettext = imports.gettext.domain(metadata.uuid);
-    _ = Gettext.gettext;
+    _ = imports.gettext.domain(domain).gettext;
 
     /* check whether we're using the right shell version before trying to fetch 
      * its locale directory */
     if (imports.misc.config.PACKAGE_VERSION < NEW_API_VERSION) {
-        let data_dirs = GLib.get_system_data_dirs();
-        for (let i = 0; i < data_dirs.length; i++) {
-            locale_dirs = locale_dirs.concat([ GLib.build_filenamev([
-                    data_dirs[i], LOCALE_SUBDIR ]) ]);
+        if (metadata['system-locale-dir'] != undefined) {
+            locale_dirs = locale_dirs.concat([ metadata['system-locale-dir'] ]);
         }
     } else {
         locale_dirs = locale_dirs.concat([ imports.misc.config.LOCALEDIR ]);
