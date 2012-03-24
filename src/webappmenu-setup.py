@@ -847,28 +847,25 @@ def read_json_file(file):
     return [ values, error_title, error_string ]
 
 def main():
-    md_path = GLib.build_filenamev([
-        GLib.path_get_dirname(os.path.realpath(__file__)),
-        MD_NAME
-    ])
-    md_file = Gio.file_new_for_path(md_path);
+    ext_path = GLib.path_get_dirname(os.path.realpath(__file__))
+
+    md_file = Gio.file_new_for_path(GLib.build_filenamev([ ext_path, MD_NAME ]))
     [ values, _, err_str ] = read_json_file(md_file)
 
-    default_path = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
-
     # look for an existing locale directory
-    data_dirs = [ GLib.path_get_dirname(default_path) ]
+    locale_dirs = [ GLib.build_filenamev([ ext_path, LOCALE_SUBDIR ]) ]
     if err_str != None:
         print(err_str)
     else:
         if values['system-locale-dir'] != None:
-            data_dirs += values['system-locale-dir']
+            locale_dirs += values['system-locale-dir']
 
-    for i in range(len(data_dirs)):
-        directory = GLib.build_filenamev([data_dirs[i], LOCALE_SUBDIR])
+    for i in range(len(locale_dirs)):
+        directory = Gio.file_new_for_path(locale_dirs[i])
 
-        if (gettext.find(EXTENSION_UUID, directory) != None):
-            gettext.bindtextdomain(EXTENSION_UUID, directory)
+        if (directory.query_file_type(Gio.FileQueryInfoFlags.NONE, None) ==
+                Gio.FileType.DIRECTORY):
+            gettext.bindtextdomain(EXTENSION_UUID, directory.get_path())
             break
 
     parser = OptionParser(g(ERR_USAGE),
@@ -888,7 +885,7 @@ def main():
         return
 
     if parser.values.filename == None:
-        filename = default_path
+        filename = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
         sys.stderr.write(g(WARN_DEF_OPT_FILE) % filename)
     else:
         filename = parser.values.filename

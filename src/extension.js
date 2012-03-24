@@ -543,18 +543,14 @@ function init_localizations(metadata) {
         locale_dirs = locale_dirs.concat([ imports.misc.config.LOCALEDIR ]);
     }
 
-    for (let j = 0; j < locale_dirs.length; j++) {
-        for (let i = 0; i < langs.length; i++) {
-            let str = GLib.build_filenamev([ locale_dirs[j], langs[i],
-                    MSG_SUBDIR, domain ]) + LOCALE_EXT;
-            let file = Gio.file_new_for_path(str);
+    for (let i = 0; i < locale_dirs.length; i++) {
+        dir = Gio.file_new_for_path(locale_dirs[i]);
 
-            if (file.query_file_type(Gio.FileQueryInfoFlags.NONE, null) ==
-                    Gio.FileType.REGULAR) {
-                imports.gettext.bindtextdomain(domain, locale_dirs[j]);
-                imports.gettext.textdomain(domain);
-                return;
-            }
+        if (dir.query_file_type(Gio.FileQueryInfoFlags.NONE, null) ==
+                Gio.FileType.DIRECTORY) {
+            imports.gettext.bindtextdomain(domain, locale_dirs[i]);
+            imports.gettext.textdomain(domain);
+            return;
         }
     }
 }
