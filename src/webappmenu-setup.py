@@ -24,6 +24,7 @@ from collections import deque
 import gettext
 import json
 import sys
+import os
 
 # general strings
 ADD_PROFILE_DIALOG      = "Add profile"
@@ -88,6 +89,7 @@ EXTENSION_UUID              = 'web-application-menu@atomant'
 HANDLE_MAIN_PROFILE_CMD     = 'epiphany about:applications'
 HANDLE_PROFILE_CMD          = 'epiphany -p --profile=\"%s\" about:applications'
 LOCALE_SUBDIR               = 'locale'
+MD_NAME                     = 'metadata.json'
 
 DEFAULT_OPTION_FILE_PARTS = [ GLib.get_user_data_dir(), 'gnome-shell',
         'extensions', EXTENSION_UUID, 'settings.json' ]
@@ -133,13 +135,10 @@ class MouseButtons:
     RIGHT = 3
 
 class Configurator(Gtk.Application):
-    def __init__(self, filename, locale_dir):
+    def __init__(self, filename):
         self.filename = filename
         self.file = Gio.file_new_for_path(self.filename)
         self.id = deque()
-
-        if locale_dir != None:
-            gettext.bindtextdomain(EXTENSION_UUID, locale_dir)
 
         # only an unique instance of this app is runnable for each json file.
         # now hash by using GQuark
@@ -741,27 +740,11 @@ class Configurator(Gtk.Application):
         self.options = {}
         self.__set_changed(False)
 
-        if not (file.query_exists(None)):
-            self.__show_error(g(ERR_TITLE),
-                    (g(ERR_FILE_NOT_FOUND) % file_name))
-            self.options = DEFAULT_OPTIONS
+        [ self.options, err_title, err_str] = read_json_file(file)
+        if err_str != None:
             self.__set_changed(True)
-        else:
-            try:
-                ret, data, _ = file.load_contents(None)
-            except GObject.GError as e:
-                self.__show_error(g(ERR_TITLE),
-                        (g(ERR_FILE_UNREADABLE) % file_name))
-                self.__set_changed(True)
-                self.options = DEFAULT_OPTIONS
-            else:
-                try:
-                    self.options = json.loads(data.decode('utf-8'))
-                except ValueError as e:
-                    self.__show_error(g(ERR_TITLE), 
-                            g(ERR_BAD_FORMAT) % file_name)
-                    self.__set_changed(True)
-                    self.options = DEFAULT_OPTIONS
+            self.options = DEFAULT_OPTIONS
+            self.__show_error(err_title, err_str)
 
         # check and fix wrong values and data types taking care not to
         # overwrite the eventually already retrieved settings
@@ -841,19 +824,50 @@ class Configurator(Gtk.Application):
             self.profile_store.set_value(it, COLUMN['dir'],
                     self.options['profiles'][i]['directory'])
 
+def read_json_file(file):
+    error_title = None
+    error_string = None
+    values = None
+
+    if not (file.query_exists(None)):
+        error_title = g(ERR_TITLE)
+        error_string = g(ERR_FILE_NOT_FOUND) % file.get_path()
+    else:
+        try:
+            _, data, _ = file.load_contents(None)
+        except GObject.GError as e:
+            error_title = g(ERR_TITLE)
+            error_string = g(ERR_FILE_UNREADABLE) % file.get_path()
+        else:
+            try:
+                values = json.loads(data.decode('utf-8'))
+            except ValueError as e:
+                error_title = g(ERR_TITLE)
+                error_string = g(ERR_BAD_FORMAT) % file.get_path()
+    return [ values, error_title, error_string ]
+
 def main():
+    md_path = GLib.build_filenamev([
+        GLib.path_get_dirname(os.path.realpath(__file__)),
+        MD_NAME
+    ])
+    md_file = Gio.file_new_for_path(md_path);
+    [ values, _, err_str ] = read_json_file(md_file)
+
     default_path = GLib.build_filenamev(DEFAULT_OPTION_FILE_PARTS)
 
     # look for an existing locale directory
     data_dirs = [ GLib.path_get_dirname(default_path) ]
-    data_dirs += GLib.get_system_data_dirs()
-    locale_dir = None
+    if err_str != None:
+        print(err_str)
+    else:
+        if values['system-locale-dir'] != None:
+            data_dirs += values['system-locale-dir']
 
     for i in range(len(data_dirs)):
         directory = GLib.build_filenamev([data_dirs[i], LOCALE_SUBDIR])
 
         if (gettext.find(EXTENSION_UUID, directory) != None):
-            locale_dir = directory
             gettext.bindtextdomain(EXTENSION_UUID, directory)
             break
 
@@ -879,7 +893,7 @@ def main():
     else:
         filename = parser.values.filename
 
-    configurator = Configurator(filename, locale_dir)
+    configurator = Configurator(filename)
     configurator.run(None)
 
 if __name__ == '__main__':
