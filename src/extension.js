@@ -523,25 +523,25 @@ WebAppExtension.prototype = {
 
 let webapps;
 let md;
+let _;
 
 function init_localizations(metadata) {
-    /* fetch the domain from metadata */
-    let domain = metadata['gettext-domain'];
     let langs = GLib.get_language_names();
     let locale_dirs = new Array(GLib.build_filenamev([metadata.path,
             LOCALE_SUBDIR]));
-
-    _ = imports.gettext.domain(domain).gettext;
+    let domain;
 
     /* check whether we're using the right shell version before trying to fetch 
-     * its locale directory */
+     * its locale directory and other info*/
     if (imports.misc.config.PACKAGE_VERSION < NEW_API_VERSION) {
-        if (metadata['system-locale-dir'] != undefined) {
-            locale_dirs = locale_dirs.concat([ metadata['system-locale-dir'] ]);
-        }
+        domain = metadata['gettext-domain'];
+        locale_dirs = locale_dirs.concat([ metadata['system-locale-dir'] ]);
     } else {
+        domain = metadata.metadata['gettext-domain'];
         locale_dirs = locale_dirs.concat([ imports.misc.config.LOCALEDIR ]);
     }
+
+    _ = imports.gettext.domain(domain).gettext;
 
     for (let i = 0; i < locale_dirs.length; i++) {
         dir = Gio.file_new_for_path(locale_dirs[i]);
