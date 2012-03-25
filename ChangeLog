@@ -7,6 +7,8 @@
 - Don't call textdomain() as it seems to conflict with other exts... go figure
 - Add v3.3.92 to the compatibility list.
 - Release as v12
+- Fixed an incompatibility with the new 3.3.x API
+- New API set to v3.3.5
 
 * Thu Mar 22 2012
 - More reliable localization directory detection.

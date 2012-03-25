@@ -45,7 +45,7 @@ const EXT_STATUS_AREA_ID    = 'webapps';
 const MENU_ALIGNMENT        = 0.5;
 const XDG_APP_DIR_PERMS     = 750;
 const FIELD_SIZE            = 1;
-const NEW_API_VERSION       = '3.3.90';
+const NEW_API_VERSION       = '3.3.5';
 
 /* default values */
 const DEFAULT_ICON_SIZE                     = 16;
