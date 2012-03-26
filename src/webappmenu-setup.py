@@ -857,7 +857,7 @@ def main():
         print(err_str)
     else:
         if values['system-locale-dir'] != None:
-            locale_dirs += values['system-locale-dir']
+            locale_dirs += [ values['system-locale-dir'] ]
 
     if values['gettext-domain'] != None:
         for i in range(len(locale_dirs)):
