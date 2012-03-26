@@ -140,8 +140,9 @@ class Configurator(Gtk.Application):
 
         # only an unique instance of this app is runnable for each json file.
         # now hash by using GQuark
-        Gtk.Application.__init__(self, application_id="%s%ld" % (APP_ID,
-                GLib.quark_from_string(self.file.get_path())),
+        Gtk.Application.__init__(self, application_id=APP_ID +
+                GLib.compute_checksum_for_string(GLib.ChecksumType.MD5,
+                self.file.get_path(), -1),
                 flags=Gio.ApplicationFlags.FLAGS_NONE)
         self.connect('activate', self.on_activate)
 
