@@ -1,5 +1,6 @@
 * Wed Mar 28 2012
 - Spanish localization
+- Enabled on GS 3.4.0
 
 * Mon Mar 26 2012
 - Back to md5 for the opened json file in order to identify the app instance
