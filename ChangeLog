@@ -1,3 +1,6 @@
+* Wed Mar 28 2012
+- Spanish localization
+
 * Mon Mar 26 2012
 - Back to md5 for the opened json file in order to identify the app instance
 - Fix for a localization bug in the configurator
