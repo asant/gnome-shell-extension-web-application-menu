@@ -55,7 +55,7 @@ MANAGE_PROFILE_TEXT     = "Manage applications"
 NEW_PROFILE_TEXT        = "New"
 RELOAD_BTN_TEXT         = "Reload"
 
-# errors
+# errors and warnings
 ERR_BAD_PROFILE     = "Error reading profile #%d\n"
 ERR_BAD_FORMAT      = "WARNING: file \"%s\" is badly formatted.\nOptions \
 initialized to their default values."
@@ -85,6 +85,17 @@ DEFAULT_OPTIONS = {
     'profiles'                      : []
 }
 
+# other useful constants
+APP_ID      = 'apps.gnome-shell.extensions.web-app-menu.configurator.file-'
+COLUMN      = { 'name': 0, 'dir': 1, 'num' : 2 }
+ERR_SIZE    = { 'x': 420, 'y': 150 }
+PADDING     = 3
+SPACING     = 3
+SIZE        = { 'x': 500, 'y': 400 }
+SPIN_END    = 1024.0
+SPIN_START  = 4.0
+SPIN_STEP   = 1.0
+
 HANDLE_MAIN_PROFILE_CMD     = 'epiphany about:applications'
 HANDLE_PROFILE_CMD          = 'epiphany -p --profile=\"%s\" about:applications'
 LOCALE_SUBDIR               = 'locale'
@@ -96,18 +107,6 @@ DEFAULT_OPTION_FILE_PARTS = [ GLib.get_user_data_dir(), 'gnome-shell',
 # please don't use _() as it clashes with python's built-in _ symbol
 g = gettext.gettext
 
-# other constants
-APP_ID      = 'apps.gnome-shell.extensions.web-app-menu.configurator.file-'
-COLUMN      = { 'name': 0, 'dir': 1, 'num' : 2 }
-ERR_SIZE    = { 'x': 420, 'y': 150 }
-PADDING     = 3
-SPACING     = 3
-SIZE        = { 'x': 500, 'y': 400 }
-SPIN_END    = 1024.0
-SPIN_START  = 4.0
-SPIN_STEP   = 1.0
-
-# enums wannabe
 class ColumnIds:
     LEFT    = 0
     RIGHT   = 1
@@ -139,7 +138,7 @@ class Configurator(Gtk.Application):
         self.id = deque()
 
         # only an unique instance of this app is runnable for each json file.
-        # now hash by using GQuark
+        # identify the opened file by the md5 digest of its full path
         Gtk.Application.__init__(self, application_id=APP_ID +
                 GLib.compute_checksum_for_string(GLib.ChecksumType.MD5,
                 self.file.get_path(), -1),
@@ -218,7 +217,6 @@ class Configurator(Gtk.Application):
             button.set_sensitive(entry1.get_text().strip() != '' and
                     entry2.get_text().strip() != '')
         def on_icon_press(entry, pos, event):
-            # left button pressed
             if event.button != MouseButtons.LEFT:
                 return
             chooser = Gtk.FileChooserDialog()
@@ -328,7 +326,6 @@ class Configurator(Gtk.Application):
 
     # show a context menu for the treeview on right-click
     def __on_button_pressed_cb(self, e):
-        # right mouse button
         if e.button == MouseButtons.RIGHT:
             self.popup_menu.popup(None, None, None, None, e.button, e.time)
             return True
@@ -385,7 +382,7 @@ class Configurator(Gtk.Application):
             return
         self.__set_changed(False)
 
-    # reload options from the json file ditching changes
+    # reload options from the json file, ditching the changes
     def __reload_cb(self):
         dialog = Gtk.Dialog()
         dialog.set_title(g(RELOAD_DIALOG))
@@ -413,7 +410,7 @@ class Configurator(Gtk.Application):
     # quit the app or show a confirm dialog in case of changes
     def __quit_cb(self):
         if self.config_changed:
-            # emulating gtk_dialog_new_with_buttons()
+            # just like gtk_dialog_new_with_buttons()
             dialog = Gtk.Dialog()
             dialog.set_title(g(QUIT_DIALOG))
             dialog.set_modal(True)
@@ -451,7 +448,8 @@ class Configurator(Gtk.Application):
         self.__set_changed(True)
         self.manage_default.set_sensitive(self.def_profile.get_active())
 
-    # connect widgets to signals
+    # there are some signals that need to be disconnected and reconnected,
+    # specially when reloading data.
     def __connect_all(self):
         self.id.append(self.def_profile.connect('notify::active', lambda t, d:
                 self.__on_default_profile_toggle_cb()))
@@ -474,7 +472,6 @@ class Configurator(Gtk.Application):
         self.id.append(self.selection.connect('changed', lambda d:
                 self.__on_select_cb()))
 
-    # disconnect widgets from signals. needed in case of file reloading
     def __disconnect_all(self):
         self.def_profile.disconnect(self.id.popleft())
         self.split_view.disconnect(self.id.popleft())
@@ -493,7 +490,7 @@ class Configurator(Gtk.Application):
         self.button_reload.set_sensitive(val)
         self.button_apply.set_sensitive(val)
 
-    # this does exactly what it says, except connecting the widget signals
+    # this does exactly what it says
     def __build_main_window(self):
         self.__build_popup()
 
@@ -658,7 +655,7 @@ class Configurator(Gtk.Application):
         self.name_column = Gtk.CellRendererText()
         self.name_column.set_property('editable', True)
         
-        # emulating gtk_tree_view_insert_column_with_attributes()
+        # just like gtk_tree_view_insert_column_with_attributes()
         column1 = Gtk.TreeViewColumn()
         column1.set_title(g(PROFILE_NAME))
         column1.pack_start(self.name_column, True)
@@ -669,7 +666,7 @@ class Configurator(Gtk.Application):
         self.dir_column = Gtk.CellRendererText()
         self.dir_column.set_property('editable', True)
 
-        # emulating gtk_tree_view_insert_column_with_attributes()
+        # same
         column2 = Gtk.TreeViewColumn()
         column2.set_title(g(PROFILE_DIR))
         column2.pack_start(self.dir_column, True)
@@ -746,7 +743,7 @@ class Configurator(Gtk.Application):
             self.__show_error(err_title, err_str)
 
         # check and fix wrong values and data types taking care not to
-        # overwrite the eventually already retrieved settings
+        # overwrite the already retrieved settings
         def check_and_set(node, key, type_str, value):
             ret = False
             try:

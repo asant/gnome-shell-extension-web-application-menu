@@ -17,7 +17,6 @@ IT_PROG_INTLTOOL(0.26)
 
 PKG_PROG_PKG_CONFIG([0.22])
 
-dnl Please keep this sorted alphabetically
 AC_CONFIG_FILES([
   src/Makefile
   Makefile

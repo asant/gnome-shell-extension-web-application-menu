@@ -73,7 +73,6 @@ const ERROR_UNREADABLE_FILE = "ERROR: could not read contents for file \"%s\".";
 /* divide and conquer search function for menu item insertion in
  * alphabetical order, with submenus at the top */
 function ab_insert(entry, split) {
-    /* any faster way to access children? */
     let children = this._getMenuItems();
     let is_submenu = (entry instanceof PopupMenu.PopupSubMenuMenuItem);
 
@@ -143,7 +142,7 @@ function ab_insert(entry, split) {
     this.addMenuItem(entry, mid);
 }
 
-/* slip the insertion function in these classes */
+/* slip the insertion function into these classes */
 PopupMenu.PopupMenu.prototype.ab_insert = ab_insert;
 PopupMenu.PopupSubMenu.prototype.ab_insert = ab_insert;
 
@@ -182,7 +181,7 @@ function ConfiguratorItem() {
     this._init.apply(this, arguments);
 }
 
-/* define a new class for the configurator entry to better detect its type
+/* define a new class for the configurator entry to easily detect its presence
  * later */
 ConfiguratorItem.prototype = {
     __proto__: PopupMenu.PopupBaseMenuItem.prototype,
@@ -265,8 +264,7 @@ WebAppExtension.prototype = {
     },
 
     _on_open_state_changed: function() {
-        /* if, while using profiles, the menu contains only a submenu,
-         * unroll the latter */
+        /* if all the root menu contains is just a submenu, unroll it */
         if ((this.menu.isOpen) && (this.options['split-profile-view'])) {
             let children = this.menu._getMenuItems();
 
@@ -298,7 +296,8 @@ WebAppExtension.prototype = {
 
         this.options = undefined;
 
-        /* store settings in a JSON file until users can install glib keys */
+        /* store settings in a JSON file until users can install gsettings
+         * keys */
         if (!(this.config_file.query_exists(null))) {
             global.log(_(WARNING_UNEXISTING_FILE).format(this.path));
         } else {
@@ -413,7 +412,6 @@ WebAppExtension.prototype = {
     },
 
     _build_entries_for_profile_dir: function(submenu, config_path) {
-        /* g_dir_open() is not introspectable, using GIO instead */
         let path = Gio.file_new_for_path(config_path);
         let enumerator = null;
         let info = null;
@@ -532,7 +530,7 @@ function init_localizations(metadata) {
     let domain;
 
     /* check whether we're using the right shell version before trying to fetch 
-     * its locale directory and other info*/
+     * its locale directory and other info */
     if (imports.misc.config.PACKAGE_VERSION < NEW_API_VERSION) {
         domain = metadata['gettext-domain'];
         locale_dirs = locale_dirs.concat([ metadata['system-locale-dir'] ]);
