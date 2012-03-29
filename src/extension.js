@@ -246,7 +246,7 @@ WebAppExtension.prototype = {
                 }));
         }
 
-        this._icon = new St.Icon({ icon_name: 'user-bookmarks',
+        this._icon = new St.Icon({ icon_name: 'non-starred',
                                    icon_type: St.IconType.SYMBOLIC,
                                    style_class: 'system-status-icon' });
         this.actor.add_actor(this._icon);
