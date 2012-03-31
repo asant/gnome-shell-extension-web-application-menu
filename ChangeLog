@@ -1,3 +1,8 @@
+* Sat Mar 31 2012
+- Merge pull request by Olivier Bonvalet <olivier.bonvalet@daevel.fr> about the
+  french localization. Many thanks for the fixes!
+- Update version to 14 and release.
+
 * Wed Mar 28 2012
 - Spanish localization
 - Enabled on GS 3.4.0
