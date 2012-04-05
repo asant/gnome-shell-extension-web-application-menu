@@ -20,10 +20,13 @@
  * USA.
  */
 
+const Cairo     = imports.cairo;
+const Clutter   = imports.gi.Clutter;
 const Gio       = imports.gi.Gio; 
 const GLib      = imports.gi.GLib;
 const Lang      = imports.lang;
 const Main      = imports.ui.main;
+const Panel     = imports.ui.panel;
 const PanelMenu = imports.ui.panelMenu;
 const PopupMenu = imports.ui.popupMenu;
 const Shell     = imports.gi.Shell;
@@ -53,6 +56,8 @@ const DEFAULT_SHOW_ICONS                    = true;
 const DEFAULT_USE_DEFAULT_PROFILE           = true;
 const DEFAULT_SPLIT_PROFILE_VIEW            = true;
 const DEFAULT_HIDE_ENTRIES_NOT_IN_XDG_DIR   = true;
+
+const MARGIN = 4;
 
 /* text */
 const BROWSE_TEXT       = "Browse your Web Applications"
@@ -246,21 +251,60 @@ WebAppExtension.prototype = {
                 }));
         }
 
-        this._icon = new St.Icon({ icon_name: 'non-starred',
-                                   icon_type: St.IconType.SYMBOLIC,
-                                   style_class: 'system-status-icon' });
-        this.actor.add_actor(this._icon);
+        this._icon = new St.DrawingArea();
+        this._icon.set_width(Panel.PANEL_ICON_SIZE - 2 * MARGIN);
+        this._icon.set_height(Panel.PANEL_ICON_SIZE - 2 * MARGIN);  
 
         this._appSystem = Shell.AppSystem.get_default();
         this._display();
 
-        this.sigcon = this._appSystem.connect('installed-changed',
+        this.sigcon1 = this._appSystem.connect('installed-changed',
                 Lang.bind(this, this._redisplay));
 
-        Main.panel.addToStatusArea(EXT_STATUS_AREA_ID, this);
         this.set_tooltip(_(BROWSE_TEXT));
         this.menu.connect('open-state-changed', Lang.bind(this,
                 this._on_open_state_changed));
+
+        Main.panel.addToStatusArea(EXT_STATUS_AREA_ID, this);
+        this.actor.add_actor(this._icon);
+
+        this.sigcon2 = this._icon.connect("repaint",
+            Lang.bind(this, this._on_repaint));
+        this._icon.queue_repaint();
+    },
+
+    /* draw the icon using cairo. notice all the positions are taken
+     * respect to the area size, so things won't go weird on resize */
+    _on_repaint: function(area) {
+        let cr = area.get_context();
+        let theme_node = this._icon.get_theme_node();
+
+        let area_width = area.get_width();
+        let area_height = area.get_height();
+        
+        cr.translate(area_width / 2.0, area_height / 2.0);
+
+        cr.setLineWidth(0);
+
+        /* draw circle */
+        cr.arc(0, 0, area_width / 2.0, 0, 2 * Math.PI);
+
+        /* draw the mouse pointer shape in a sub path */
+        cr.newSubPath();
+        cr.moveTo(area_width / -5.5, area_width / 4.5);
+        cr.relLineTo(0, area_width / -1.8);
+        cr.relLineTo(area_width / 2.0, area_width * 0.3);
+        cr.relLineTo(area_width / -5.0, area_width / 10.0);
+        cr.relLineTo(area_width / 8.0, area_width / 4.0);
+        cr.relLineTo(area_width / -8.0, area_width / 16.0);
+        cr.relLineTo(area_width / -8.0, area_width / -4.0);
+        cr.closePath();
+
+        /* difference in filling */
+        cr.setFillRule(Cairo.FillRule.EVEN_ODD);
+        Clutter.cairo_set_source_color(cr, theme_node.get_foreground_color());
+        cr.fillPreserve();
+        cr.stroke();
     },
 
     _on_open_state_changed: function() {
@@ -508,9 +552,9 @@ WebAppExtension.prototype = {
         this._display();
     },
 
-    destroy: function()
-    {
-        this._appSystem.disconnect(this.sigcon);
+    destroy: function() {
+        this._icon.disconnect(this.sigcon2);
+        this._appSystem.disconnect(this.sigcon1);
         this.monitor.cancel();
         this.actor._delegate = null;
         this.menu.destroy();
@@ -564,4 +608,3 @@ function enable() {
 function disable() {
     webapps.destroy();
 }
-
