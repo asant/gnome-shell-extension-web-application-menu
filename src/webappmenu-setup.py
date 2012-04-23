@@ -1,7 +1,7 @@
 #!/usr/bin/python
 #
 # Setup application for the Web Application Menu extension for the GNOME Shell.
-# Copyright (C) 2012  Andrea Santilli <andresantilli gmx com>
+# Copyright (C) 2012  Andrea Santilli <andreasantilli gmx com>
 #
 # This program is free software; you can redistribute it and/or
 # modify it under the terms of the GNU General Public License
