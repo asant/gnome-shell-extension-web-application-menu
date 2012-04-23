@@ -2,7 +2,7 @@
 /*
  * GNOME Shell extension that aims at showing web applications from many
  * Epiphany profiles, in a drop-down menu located on the Shell's top panel.
- * Copyright (C) 2012  Andrea Santilli <andresantilli gmx com>
+ * Copyright (C) 2012  Andrea Santilli <andreasantilli gmx com>
  *
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
