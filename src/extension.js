@@ -45,7 +45,7 @@ const EXT_STATUS_AREA_ID    = 'webapps';
 const MENU_ALIGNMENT        = 0.5;
 const XDG_APP_DIR_PERMS     = 750;
 const FIELD_SIZE            = 1;
-const NEW_API_VERSION       = '3.3.5';
+const NEW_API_VERSION       = [ 3, 3, 0 ];
 
 /* default values */
 const DEFAULT_ICON_SIZE                     = 16;
@@ -523,6 +523,16 @@ let webapps;
 let md;
 let _;
 
+function compare_versions(a, b) {
+    for (let i in a) {
+        if (a[i] == b[i])
+            continue;
+
+        return (a[i] - b[i]);
+    }
+    return 0;
+}
+
 function init_localizations(metadata) {
     let langs = GLib.get_language_names();
     let locale_dirs = new Array(GLib.build_filenamev([metadata.path,
@@ -531,7 +541,9 @@ function init_localizations(metadata) {
 
     /* check whether we're using the right shell version before trying to fetch 
      * its locale directory and other info */
-    if (imports.misc.config.PACKAGE_VERSION < NEW_API_VERSION) {
+    let current_version = imports.misc.config.PACKAGE_VERSION.split('.');
+
+    if (compare_versions(current_version, NEW_API_VERSION) < 0) {
         domain = metadata['gettext-domain'];
         locale_dirs = locale_dirs.concat([ metadata['system-locale-dir'] ]);
     } else {
