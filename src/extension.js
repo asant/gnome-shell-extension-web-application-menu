@@ -555,8 +555,8 @@ function init_localizations(metadata) {
 
     _ = imports.gettext.domain(domain).gettext;
 
-    for (let i = 0; i < locale_dirs.length; i++) {
-        dir = Gio.file_new_for_path(locale_dirs[i]);
+    for (let i in locale_dirs) {
+        let dir = Gio.file_new_for_path(locale_dirs[i]);
 
         if (dir.query_file_type(Gio.FileQueryInfoFlags.NONE, null) ==
                 Gio.FileType.DIRECTORY) {
