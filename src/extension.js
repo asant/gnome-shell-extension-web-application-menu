@@ -428,11 +428,10 @@ WebAppExtension.prototype = {
 
         for each(let profile in this.options['profiles']) {
             if (this.options['split-profile-view']) {
-                let name = profile['name'];
-                let dir = profile['directory'];
-                let submenu = new PopupMenu.PopupSubMenuMenuItem(name);
-
-                this._build_entries_for_profile_dir(submenu.menu, dir);
+                let submenu = new PopupMenu.PopupSubMenuMenuItem(
+                        profile['name']);
+                this._build_entries_for_profile_dir(submenu.menu,
+                        profile['directory']);
                 if (submenu.menu._getMenuItems().length) {
                     this.menu.ab_insert(submenu, true);
                 }
