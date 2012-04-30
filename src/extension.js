@@ -426,10 +426,10 @@ WebAppExtension.prototype = {
                     GNOME_DOT_GNOME, APP_NAME ]));
         }
 
-        for (let i = 0; i < this.options['profiles'].length; i++) {
+        for each(let profile in this.options['profiles']) {
             if (this.options['split-profile-view']) {
-                let name = this.options['profiles'][i]['name'];
-                let dir = this.options['profiles'][i]['directory'];
+                let name = profile['name'];
+                let dir = profile['directory'];
                 let submenu = new PopupMenu.PopupSubMenuMenuItem(name);
 
                 this._build_entries_for_profile_dir(submenu.menu, dir);
@@ -438,7 +438,7 @@ WebAppExtension.prototype = {
                 }
             } else {
                 this._build_entries_for_profile_dir(this.menu,
-                        this.options['profiles'][i]['directory']);
+                        profile['directory']);
 
             }
         }
