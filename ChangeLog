@@ -1,3 +1,6 @@
+* Mon Apr 30 2012
+- more elegant "for each" loop
+
 * Sun Apr 29 2012
 - more realistic version comparison
 - added a variable declaration (thanks to muflone for spotting the bug)
