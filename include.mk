@@ -1,5 +1,5 @@
 extension_url = https://github.com/asant/gnome-shell-extension-web-application-menu
-extension_version = 14
+extension_version = 15
 extension_name = web-application-menu
 extension_base = @atomant
 uuid = $(extension_name)$(extension_base)
